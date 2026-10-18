@@ -50,11 +50,11 @@ public final class AudioEngine {
     // ---------- Публичный API ----------
 
     /**
-     * Читит аудиофайл и конвертирует его в 16-битный PCM little-endian.
+     * Читает аудиофайл и конвертирует его в 16-битный PCM little-endian.
      *
-     * Сейчас надёжно поддерживаются WAV-файлы, которые Java Sound может
-     * прочитать/сконвертировать. Для гарантированной работы лучше использовать
-     * WAV PCM 16-bit.
+     * Для гарантированной работы лучше использовать WAV PCM 16-bit.
+     * MP3 сначала нужно сконвертировать в WAV, например:
+     *   ffmpeg -i input.mp3 -c:a pcm_s16le -ar 44100 -ac 2 input.wav
      */
     public static PcmAudio loadPcm(File file) throws Exception {
         try (AudioInputStream in = AudioSystem.getAudioInputStream(file)) {
@@ -103,11 +103,6 @@ public final class AudioEngine {
 
     /**
      * Прячет зашифрованный текст в 16-битный PCM.
-     *
-     * @param pcmData  PCM-данные, полученные из {@link #loadPcm(File)}
-     * @param text     текст для сокрытия
-     * @param password пароль
-     * @return новые PCM-данные со спрятанным текстом
      */
     public static byte[] hideText(byte[] pcmData, String text, char[] password) {
         validatePcm(pcmData);

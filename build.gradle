@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'ru.mcs'
-version = '0.1.0'
+version = '0.2.0'
 
 java {
     toolchain {
@@ -32,7 +32,7 @@ run {
     jvmArgs = ['-Dfile.encoding=UTF-8']
 }
 
-// Опционально: fat jar одной командой
+// Fat jar со всеми зависимостями
 tasks.register('fatJar', Jar) {
     dependsOn tasks.named('classes')
 
@@ -53,4 +53,8 @@ tasks.register('fatJar', Jar) {
     exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
     exclude 'META-INF/*.MF'
     exclude 'module-info.class'
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('fatJar')
 }

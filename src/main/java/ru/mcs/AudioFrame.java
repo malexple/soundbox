@@ -1,5 +1,6 @@
 package ru.mcs;
 
+import javax.sound.sampled.AudioFormat;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -15,7 +16,6 @@ import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.sound.sampled.AudioFormat;
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.io.File;

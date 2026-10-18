@@ -10,8 +10,11 @@ public final class Main {
     }
 
     public static void main(String[] args) {
-        // GUI-режим.
-        // Позже сюда можно добавить CLI, как в stegobox.
+        if (args.length > 0) {
+            System.exit(Cli.run(args));
+        }
+
+        // GUI-режим
         FlatLightLaf.setup();
 
         UIManager.put("Component.focusWidth", 1);
