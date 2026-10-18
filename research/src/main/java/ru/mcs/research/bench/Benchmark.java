@@ -5,8 +5,10 @@ import ru.mcs.research.carriers.PhaseCodingCarrier;
 import ru.mcs.research.carriers.SpreadSpectrumCarrier;
 import ru.mcs.research.carriers.TransformQimCarrier;
 import ru.mcs.research.core.BlockCarrier;
+import ru.mcs.research.core.SampleSyncStegoChannel;
 import ru.mcs.research.core.StegoChannel;
 import ru.mcs.research.core.SyncStegoChannel;
+import ru.mcs.research.dsp.SampleSyncPreamble;
 import ru.mcs.research.dsp.Signals;
 
 import java.nio.charset.StandardCharsets;
@@ -28,6 +30,8 @@ public final class Benchmark {
     private static final int SECONDS = 6;
 
     private static final byte[] MESSAGE = "ABCDEF12".getBytes(StandardCharsets.UTF_8);
+
+    private static final SampleSyncPreamble PREAMBLE = new SampleSyncPreamble(1024, 0.10, 0xC0FFEEL);
 
     public record Row(String signal, String method, String attack,
                       double ber, boolean exact, double snrDb) {
@@ -76,7 +80,9 @@ public final class Benchmark {
                 new Attack("pad512", x -> Attacks.padStart(x, 512)),
                 new Attack("crop512", x -> Attacks.crop(x, 512)),
                 new Attack("lp16", x -> Attacks.lowpass(x, 16)),
-                new Attack("pad137", x -> Attacks.padStart(x, 137))
+                new Attack("pad137", x -> Attacks.padStart(x, 137)),
+                new Attack("crop131", x -> Attacks.crop(x, 131)),
+                new Attack("crop149", x -> Attacks.crop(x, 149))
         );
     }
 
@@ -89,8 +95,8 @@ public final class Benchmark {
             for (Supplier<BlockCarrier> factory : carriers()) {
                 BlockCarrier carrier = factory.get();
 
-                SyncStegoChannel channel = new SyncStegoChannel(carrier, REPETITION);
-
+                SampleSyncStegoChannel channel =
+                        new SampleSyncStegoChannel(carrier, REPETITION, PREAMBLE);
                 double[] stego = channel.embed(base, MESSAGE);
                 double snr = Metrics.snrDb(base, stego);
                 boolean[] expected = StegoChannel.frame(MESSAGE);

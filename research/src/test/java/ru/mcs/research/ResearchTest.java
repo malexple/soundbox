@@ -7,9 +7,11 @@ import ru.mcs.research.carriers.PhaseCodingCarrier;
 import ru.mcs.research.carriers.SpreadSpectrumCarrier;
 import ru.mcs.research.carriers.TransformQimCarrier;
 import ru.mcs.research.core.BlockCarrier;
+import ru.mcs.research.core.SampleSyncStegoChannel;
 import ru.mcs.research.core.StegoChannel;
 import ru.mcs.research.dsp.Dct2;
 import ru.mcs.research.dsp.HaarWavelet;
+import ru.mcs.research.dsp.SampleSyncPreamble;
 import ru.mcs.research.dsp.Signals;
 
 import java.nio.charset.StandardCharsets;
@@ -244,5 +246,40 @@ class ResearchTest {
                 IllegalArgumentException.class,
                 () -> new StegoChannel(new SpreadSpectrumCarrier(256, 0.06, 1), 2)
         );
+    }
+
+    @Test
+    void samplePreambleFindsExactOffset() {
+        int n = 4000;
+        SampleSyncPreamble p = new SampleSyncPreamble(512, 0.1, 42);
+        double[] signal = noiseBlock(n, 100);
+        p.write(signal, 0);
+
+        assertEquals(0, p.find(signal));
+
+        // сдвиг на 137 отсчётов
+        double[] shifted = Attacks.crop(signal, 137);
+        assertEquals(-137, p.find(shifted));
+
+        // padding на 149 отсчётов
+        double[] padded = Attacks.padStart(signal, 149);
+        assertEquals(149, p.find(padded));
+    }
+
+    @Test
+    void sampleSyncChannelSurvivesSubBlockCrop() {
+        SampleSyncPreamble preamble =
+                new SampleSyncPreamble(512, 0.1, 42);
+        SampleSyncStegoChannel ch = new SampleSyncStegoChannel(
+                new SpreadSpectrumCarrier(256, 0.06, 42), 3, preamble);
+
+        byte[] payload = "HI!".getBytes(StandardCharsets.UTF_8);
+        double[] signal = Signals.normalizePeak(noiseBlock(40_000, 11), 0.5);
+        double[] stego = ch.embed(signal, payload);
+
+        // раньше это гарантированно ломало sync-header
+        assertArrayEquals(payload, ch.extract(Attacks.crop(stego, 131)));
+        assertArrayEquals(payload, ch.extract(Attacks.crop(stego, 149)));
+        assertArrayEquals(payload, ch.extract(Attacks.padStart(stego, 137)));
     }
 }
